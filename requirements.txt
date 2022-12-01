@@ -1,0 +1,5 @@
+numpy
+pandas
+pymarketstore
+distlib
+pip
