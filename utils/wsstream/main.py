@@ -23,23 +23,26 @@ class dydx:
                 async with self.ws as websocket:
                     msg = await websocket.recv()
             except (websockets.ConnectionClosedOK, websockets.ConnectionClosedError, websockets.ConnectionClosed, websockets.InvalidState, websockets.PayloadTooBig, websockets.ProtocolError) as e:
-                 print(e)
+                print(e)
+                quit()
             except Exception as e:
-                 print(e)
-                 quit()
+                print(e)
+                quit()
             else:
-                print("received {}", msg)
+                print("received on read {}", msg)
 
-    async def write_ws(self, websocket, uri, payload):
-        while True:
-            try:
-                message = marketsupdatereq()
-                msg = await websocket.send(message())
-                print(msg)
-            except (websockets.ConnectionClosedOK, websockets.ConnectionClosedError, websockets.ConnectionClosed, websockets.InvalidState, websockets.PayloadTooBig, websockets.ProtocolError) as e:
-                print(e)
-            except Exception as e:
-                print(e)
+    async def write_ws(self, payload):
+        try:
+            async with self.ws as websocket:
+                msg = await websocket.send(marketsupdatereq())
+        except (websockets.ConnectionClosedOK, websockets.ConnectionClosedError, websockets.ConnectionClosed, websockets.InvalidState, websockets.PayloadTooBig, websockets.ProtocolError) as e:
+            print(e)
+            quit()
+        except Exception as e:
+            print(e)
+        else:
+            print("received on write {}", msg)
+
 
 # https://docs.dydx.exchange/?json#initial-response-2
 def orderbookrequest(asset):
@@ -80,9 +83,10 @@ async def main():
         quit()
     asset = args.asset
     exchange = dydx(DYDX_URI)
-
+    await exchange.write_ws(marketsupdatereq())
     while True:
         await exchange.read_ws()
 
 if __name__ == "__main__":
+    print("running stream")
     asyncio.run(main())
