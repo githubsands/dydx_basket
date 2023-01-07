@@ -32,16 +32,24 @@ class dydx:
                 print("received on read {}", msg)
 
     async def write_ws(self, payload):
-        try:
-            async with self.ws as websocket:
-                msg = await websocket.send(marketsupdatereq())
-        except (websockets.ConnectionClosedOK, websockets.ConnectionClosedError, websockets.ConnectionClosed, websockets.InvalidState, websockets.PayloadTooBig, websockets.ProtocolError) as e:
-            print(e)
+        retry = 0 
+        while retry < 3:
+            try:
+                async with self.ws as websocket:
+                    msg = await websocket.send(marketsupdatereq())
+            except (websockets.ConnectionClosedOK, websockets.ConnectionClosedError, websockets.ConnectionClosed, websockets.InvalidState, websockets.PayloadTooBig, websockets.ProtocolError) as e:
+                print(e)
+                quit()
+            except Exception as e:
+                print(e)
+            else:
+                if msg == None:
+                    print("failed to subscribe")
+                    retry +=1
+                    continue
+                print("received on write {}", msg)
+        if retry == 3:
             quit()
-        except Exception as e:
-            print(e)
-        else:
-            print("received on write {}", msg)
 
 
 # https://docs.dydx.exchange/?json#initial-response-2
