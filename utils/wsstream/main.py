@@ -36,7 +36,7 @@ class dydx:
         while retry < 3:
             try:
                 async with self.ws as websocket:
-                    msg = await websocket.send(marketsupdatereq())
+                    msg = await websocket.send(payload)
             except (websockets.ConnectionClosedOK, websockets.ConnectionClosedError, websockets.ConnectionClosed, websockets.InvalidState, websockets.PayloadTooBig, websockets.ProtocolError) as e:
                 print(e)
                 quit()
@@ -58,40 +58,32 @@ def orderbookrequest(asset):
         "type": "subscribed",
         "channel": "v3_orderbook",
         "id": asset,
-        "contents": {
-            bids: {
-                price: "",
-                size: "",
-                offset: "",
-            },
-            asks: {
-                price: "",
-                size: "",
-                offset: "",
-            },
-        },
         "includeOffsets": "false",
     }
     return json.dumps(req)
 
-def marketsupdatereq():
+def marketsupdatereq(asset):
     req = {
         "type": "subscribe",
         "channel": "v3_markets",
     }
+
     print(req)
     return json.dumps(req).encode()
 
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--asset', type=str, default='')
+    parser.add_argument('--marketdata')
+    parser.add_argument('--orderbooks')
+
     args = parser.parse_args()
     if args.asset == '':
         print("must define --asset to stream")
         quit()
     asset = args.asset
     exchange = dydx(DYDX_URI)
-    await exchange.write_ws(marketsupdatereq())
+    await exchange.write_ws(marketsupdatereq(asset))
     while True:
         await exchange.read_ws()
 
