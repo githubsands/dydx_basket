@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 # https://dydxprotocol.github.io/v3-teacher/#v3-websocket-api
 
 import asyncio
@@ -32,7 +33,7 @@ class dydx:
                 print("received on read {}", msg)
 
     async def write_ws(self, payload):
-        retry = 0 
+        retry = 0
         while retry < 3:
             try:
                 async with self.ws as websocket:
@@ -53,12 +54,12 @@ class dydx:
 
 
 # https://docs.dydx.exchange/?json#initial-response-2
-def orderbookrequest(asset):
+def orderbookrequest(asset, offset):
     req = {
         "type": "subscribed",
         "channel": "v3_orderbook",
         "id": asset,
-        "includeOffsets": "false",
+        "includeOffsets": offset,
     }
     return json.dumps(req)
 
@@ -74,16 +75,23 @@ def marketsupdatereq(asset):
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--asset', type=str, default='')
-    parser.add_argument('--marketdata')
-    parser.add_argument('--orderbooks')
+    parser.add_argument('--stream', type=str, default='')
 
     args = parser.parse_args()
-    if args.asset == '':
+    if args.asset == '' and args.stream == '':
         print("must define --asset to stream")
+        print("must define --stream as orderbooks or marketsupdate")
         quit()
     asset = args.asset
     exchange = dydx(DYDX_URI)
-    await exchange.write_ws(marketsupdatereq(asset))
+    match args.stream:
+        case "orderbooks":
+            await exchange.write_ws(marketsupdatereq(asset))
+        case "marketsupdatereq":
+            await exchange.write_ws(marketsupdatereq(asset))
+        case _:
+            print("stream must be defined as orderbooks or marketsupdatereq")
+            quit()
     while True:
         await exchange.read_ws()
 
