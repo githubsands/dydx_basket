@@ -5,7 +5,9 @@ a portfolio of dydx perps
 
 # tools
 
--- wsstream: streams orderbooks and marketsupdates from dydx websocket server
+-- wsstream: streams orderbooks and marketsupdates from dydx websocket server. start porting to [py03](https://pyo3.rs/v0.17.3/)
+
+#https://pyo3.rs/v0.17.3/
 
 ## NOTES:
 
