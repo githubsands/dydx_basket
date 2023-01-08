@@ -1,3 +1,2 @@
 websockets==10.4
-pylint
-web3
+orjson

@@ -3,6 +3,7 @@
 # NEEDED DOCS:
 #   https://websockets.readthedocs.io/en/10.4/
 #   https://dydxprotocol.github.io/v3-teacher/#v3-websocket-api
+#   https://pypi.org/project/orjson/ - TODO: unmarshalling is slow even with this package - is there an alternate route?
 
 import asyncio
 import websockets
@@ -12,6 +13,7 @@ import urllib
 import base64
 import argparse
 import os
+import orjson
 
 DYDX_URI="wss://api.dydx.exchange/v3/ws"
 
@@ -19,10 +21,6 @@ class dydx:
     def __init__(self, uri):
         self.uri = uri
         self.ws = websockets.connect(uri)
-
-    def __repr__(self):
-        class_name = type(self).__name__
-        return '{}({!r}), {!r})'.format(class_name, *self)
 
     # TODO: Move connecting to the websocket its own method and simplify read_ws
     async def connect(self):
@@ -45,7 +43,10 @@ class dydx:
                 print(e)
                 quit()
             else:
-                print("received on read {}", msg)
+                python_object = orjson.loads(msg)
+                # TODO: May be a faster way to check for contents
+                if 'contents' in python_object:
+                    print(python_object['contents'])
 
     async def write_ws(self, payload):
         retry = 0
@@ -100,22 +101,24 @@ async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--asset', type=str, default='')
     parser.add_argument('--stream', type=str, default='')
+    parser.add_argument('--filters', type=str, default='') # TODO: Make this an array for multiplie filters
+
     args = parser.parse_args()
     if args.asset == '' and args.stream == '':
         print("must define --asset to stream")
         print("must define --stream as orderbooks or marketsupdate")
         quit()
     asset = args.asset
-    exchange = dydx(DYDX_URI)
     match args.stream:
         case "orderbooks":
+            exchange = dydx(DYDX_URI)
             await exchange.write_ws(orderbookreq(asset, "false"))
         case "marketsupdatereq":
+            exchange = dydx(DYDX_URI)
             await exchange.write_ws(marketsupdatereq(asset))
         case _:
             print("stream must be defined as orderbooks or marketsupdatereq")
             quit()
-    # while True:
     await exchange.read_ws()
 
 if __name__ == "__main__":
