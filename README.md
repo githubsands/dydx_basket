@@ -7,6 +7,6 @@ a portfolio of dydx perps
 
 -- wsstream: streams orderbooks and marketsupdates from dydx websocket server
 
-NOTES:
+## NOTES:
 
-(1) DYDX Sends a new connection the full orderbook then sends updates to this structure
+(1) DYDX Sends a new connection the a snapshot of the ordebook then sends updates to this structure

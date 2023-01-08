@@ -35,15 +35,12 @@ class dydx:
     async def read_ws(self):
         while True:
             try:
-                # async with self.ws as websocket:
-                    # print("receiving")
-                    msg = await self.open.recv()
+                msg = await self.open.recv()
             except (websockets.ConnectionClosedOK, websockets.ConnectionClosedError, websockets.ConnectionClosed, websockets.InvalidState, websockets.PayloadTooBig, websockets.ProtocolError) as e:
                 print(e)
                 self.open = await websockets.connect(self.uri)  # reconnect to websocket
                 msg = await self.open.send(self.subscription)
                 continue
-                quit()
             except Exception as e:
                 print(e)
                 quit()
@@ -89,7 +86,7 @@ def orderbookreq(asset, offset):
         "includeOffsets": offset,
     }
     print("sending orderbook subscription", req)
-    return json.dumps(req)
+    return json.dumps(req).encode()
 
 def marketsupdatereq(asset):
     req = {
