@@ -22,7 +22,7 @@ class dydx:
         self.uri = uri
         self.ws = websockets.connect(uri)
 
-    # TODO: Move connecting to the websocket its own method and simplify read_ws
+    # TODO: Move connecting to the websocket its own method and simplify write_ws
     async def connect(self):
         try:
             async with websockets.connect(uri) as websocket:
@@ -45,8 +45,11 @@ class dydx:
             else:
                 python_object = orjson.loads(msg)
                 # TODO: May be a faster way to check for contents
+                # TODO: Make this asset agnostic and configurable by flag input
                 if 'contents' in python_object:
+                    #if 'markets' in python_object['contents']:
                     print(python_object['contents'])
+                        #print(python_object['contents']['markets']['CELO-USD'])
 
     async def write_ws(self, payload):
         retry = 0
@@ -89,6 +92,8 @@ def orderbookreq(asset, offset):
     print("sending orderbook subscription", req)
     return json.dumps(req).encode()
 
+# NOTE: Does their API not continuously stream assets?
+# NOTE: Does their API not continously stream marketupdates?
 def marketsupdatereq(asset):
     req = {
         "type": "subscribe",
